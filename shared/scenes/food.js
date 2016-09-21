@@ -7,6 +7,7 @@ import {
   ScrollView
 } from 'react-native';
 import moment from 'moment';
+import _ from 'lodash';
 
 const styles = StyleSheet.create({
   page: {
@@ -53,6 +54,21 @@ const Day = ({name, fedOn, toFeed}) => {
 };
 
 const Food = (props) => {
+  let scrollView;
+  const scrollToCenter = (width, height) => {
+    // I have no idea, the scrollView ends up being larger than the size of the elements for some reason??
+    if(scrollView)
+      // TODO: Remove hardcoded offset and dynamically calculate based on size of Day components
+      scrollView.scrollTo({x: 400 + 20, animated: false});
+  };
+
+  const dateOffsets = _.range(-7, 8);
+  const days = _.map(dateOffsets, (offset, index) => {
+    const date = moment().startOf('day').add(offset, 'days');
+
+    return <Day name={date.format('dddd')} key={index} />;
+  });
+
   return (
     <View style={styles.page}>
       <View style={styles.slider}>
@@ -60,16 +76,10 @@ const Food = (props) => {
           horizontal
           contentContainerStyle={styles.scrollContainer}
           showsHorizontalScrollIndicator={false}
+          onContentSizeChange={scrollToCenter}
+          ref={(sv) => { scrollView = sv }}
         >
-          <Day name={'Monday'} />
-          <Day name={'Tuesday'} />
-          <Day name={'Wednesday'} />
-          <Day name={'Thursday'} />
-          <Day name={'Friday'} />
-          <Day name={'Saturday'} />
-          <Day name={'Sunday'} />
-          <Day name={'Monday'} />
-          <Day name={'Tuesday'} />
+          {days}
         </ScrollView>
       </View>
       <View style={styles.footer}>
