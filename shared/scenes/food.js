@@ -9,7 +9,7 @@ import {
 import moment from 'moment';
 import _ from 'lodash';
 
-const styles = StyleSheet.create({
+const styles = {
   page: {
     flex: 1,
     top: 20
@@ -27,28 +27,29 @@ const styles = StyleSheet.create({
     height: 270,
     width: 320,
   },
-  dayContainer: {
-    marginLeft: 10,
-    marginRight: 10,
-    alignItems: 'center',
-    flexDirection: 'column',
-  },
   dayImage: {
     width: 50,
     height: 50,
   },
-  dayText: {
-    fontFamily: 'Avenir',
-    color: '#1FA7FF'
-  },
-});
+};
 
 const foodImage = require('../../images/Food.png');
 const Day = ({name, fedOn, toFeed}) => {
+  const viewStyle = {
+    marginLeft: 10,
+    marginRight: 10,
+    alignItems: 'center',
+    flexDirection: 'column',
+  };
+  const textStyle = {
+    fontFamily: 'Avenir',
+    color: fedOn ? 'red' : toFeed ? 'green' : '#1FA7FF'
+  };
+
   return (
-    <View style={styles.dayContainer}>
+    <View style={viewStyle}>
       <Image source={foodImage} style={styles.dayImage} />
-      <Text style={styles.dayText}>{name}</Text>
+      <Text style={textStyle}>{name}</Text>
     </View>
   );
 };
