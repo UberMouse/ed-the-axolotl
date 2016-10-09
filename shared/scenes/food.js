@@ -31,12 +31,15 @@ const styles = {
   },
   dayImage: {
     width: 50,
-    height: 50,
+    height: 100,
   },
 };
 
-const foodImage = require('../../images/Food.png');
-const Day = ({name, fedOn, toFeed, onClick}) => {
+const foodImage = require('../../images/Food_Mutual.png');
+const foodUnfedImage = require('../../images/Food_Unfed.png');
+const foodFedImage = require('../../images/Food_Fed.png');
+
+const Day = ({name, fedOn, toFeed, highlighted, onClick}) => {
   const viewStyle = {
     marginLeft: 10,
     marginRight: 10,
@@ -45,37 +48,56 @@ const Day = ({name, fedOn, toFeed, onClick}) => {
   };
   const textStyle = {
     fontFamily: 'Avenir',
-    color: fedOn ? 'green' : toFeed ? 'red' : '#1FA7FF'
+    color: highlighted ? 'red' : '#1FA7FF'
   };
+
+  const image = fedOn ? foodFedImage : toFeed ? foodUnfedImage : foodImage;
 
   return (
     <TouchableHighlight onPress={onClick}>
       <View style={viewStyle}>
-        <Image source={foodImage} style={styles.dayImage} onClick={() => console.log('foooo')}/>
+        <Image source={image} style={styles.dayImage} />
         <Text style={textStyle}>{name}</Text>
       </View>
     </TouchableHighlight>
   );
 };
 
-const Food = ({markFed, fedOnDays, toFeedOn, days}) => {
-  let scrollView;
-  const scrollToCenter = (width, height) => {
-    // I have no idea, the scrollView ends up being larger than the size of the elements for some reason??
-    if(scrollView)
-      // TODO: Remove hardcoded offset and dynamically calculate based on size of Day components
-      scrollView.scrollTo({x: 400 + 20, animated: false});
-  };
-
-  const dateOffsets = _.range(-7, 8);
-  const dayComponents = _.map(dateOffsets, (offset, index) => {
-    const date = moment().startOf('day').add(offset, 'days');
-    const day = date.format('dddd');
-    const fedOnThisDay = _.some(fedOnDays, d => d.isSame(date))
-    const toFeedOnThisDay = _.some(toFeedOn, d => d.isSame(date));
-
-    return <Day name={day} key={index} fedOn={fedOnThisDay} toFeed={toFeedOnThisDay} onClick={markFed.bind(null, date)}/>;
+const Food = ({markFed, fedOnDay, feedingDays}) => {
+  const feedingDayComponents = _.map(feedingDays, d => {
+    const name = d.format('dddd');
+    console.log(moment().format('dddd'), name)
+    return (
+      <Day
+        name={name}
+        key={d.toString()}
+        onClick={markFed.bind(null, d)}
+        highlighted={moment().format('dddd') === name}
+        toFeed={true}
+      />
+    );
   });
+  const fedDayComponent = (
+    <Day
+      name={fedOnDay.format('dddd')}
+      key={fedOnDay.toString()}
+      onClick={markFed.bind(null, fedOnDay)}
+      fedOn={true}
+    />
+  );
+
+  const dayComponents = [fedDayComponent, ...feedingDayComponents]
+  console.log(dayComponents)
+
+  // const dateOffsets = _.range(-7, 8);
+  // const dayComponents = _.map(dateOffsets, (offset, index) => {
+  //   const date = moment().startOf('day').add(offset, 'days');
+  //   const day = date.format('dddd');
+  //   const fedOnThisDay = _.some(fedOnDays, d => d.isSame(date))
+  //   const toFeedOnThisDay = _.some(toFeedOn, d => d.isSame(date));
+
+  //   return <Day name={day} key={index} fedOn={fedOnThisDay} toFeed={toFeedOnThisDay} onClick={markFed.bind(null, date)}/>;
+  // });
 
   return (
     <View style={styles.page}>
@@ -84,8 +106,6 @@ const Food = ({markFed, fedOnDays, toFeedOn, days}) => {
           horizontal
           contentContainerStyle={styles.scrollContainer}
           showsHorizontalScrollIndicator={false}
-          onContentSizeChange={scrollToCenter}
-          ref={(sv) => { scrollView = sv }}
         >
           {dayComponents}
         </ScrollView>
@@ -101,33 +121,35 @@ class FoodState extends Component {
   constructor() {
     super();
 
-    const dateOffsets = _.range(-7, 8);
-    const days = _.map(dateOffsets, (offset) => {
-      const date = moment().startOf('day').add(offset, 'days');
-
-      return date;
-    });
-
     this.state = {
-      fedOn: [],
+      loading: true,
+      fedOn: null,
       toFeed: [],
-      days,
     }
 
-    _.bindAll(this, 'markFed', 'generateToFeedDays');
+    _.bindAll(this, 'markFed');
   }
 
   componentDidMount() {
+    AsyncStorage.setItem('fedOn', moment());
     AsyncStorage.getItem('fedOn').then(value => {
       if(_.isNil(value))
         return;
 
+      const today = moment().startOf('day')
+      const fedOn = moment(value)
+      console.log(fedOn);
+      const toFeed = [2, 4, 6].map(n => {
+        return moment(fedOn.toString()).startOf('day').add(n, 'days')
+      });
+      console.log(toFeed)
+      const nextFeeding = _.head(toFeed);
+
       this.setState({
-        fedOn: _.map(
-          JSON.parse(value),
-          date => moment(date)
-        )
-      }, this.generateToFeedDays);
+        fedOn,
+        toFeed,
+        loading: false
+      });
     });
   }
 
@@ -148,24 +170,14 @@ class FoodState extends Component {
     this.setState({fedOn}, this.generateToFeedDays)
   }
 
-  generateToFeedDays() {
-    const sortedFeedingDays = this.state.fedOn.sort((a, b) => {
-      return a.isBefore(b) ? -1 : 1;
-    });
-    const lastFedOn = _.last(sortedFeedingDays);
-    const daysToCheck = _.filter(this.state.days, d => d.isAfter(lastFedOn));
-
-    const daysToFeedOn = _.filter(daysToCheck, (d, index) => index % 2 != 0);
-
-    this.setState({toFeed: daysToFeedOn});
-  }
-
   render() {
+    if(this.state.loading)
+      return null;
+
     return <Food
       markFed={this.markFed}
-      fedOnDays={this.state.fedOn}
-      toFeedOn={this.state.toFeed}
-      days={this.state.days}
+      fedOnDay={this.state.fedOn}
+      feedingDays={this.state.toFeed}
     />;
   }
 }
