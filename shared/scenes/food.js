@@ -66,7 +66,7 @@ const Day = ({name, fedOn, toFeed, highlighted, onClick}) => {
 const Food = ({markFed, fedOnDay, feedingDays}) => {
   const feedingDayComponents = _.map(feedingDays, d => {
     const name = d.format('dddd');
-    console.log(moment().format('dddd'), name)
+
     return (
       <Day
         name={name}
@@ -87,17 +87,6 @@ const Food = ({markFed, fedOnDay, feedingDays}) => {
   );
 
   const dayComponents = [fedDayComponent, ...feedingDayComponents]
-  console.log(dayComponents)
-
-  // const dateOffsets = _.range(-7, 8);
-  // const dayComponents = _.map(dateOffsets, (offset, index) => {
-  //   const date = moment().startOf('day').add(offset, 'days');
-  //   const day = date.format('dddd');
-  //   const fedOnThisDay = _.some(fedOnDays, d => d.isSame(date))
-  //   const toFeedOnThisDay = _.some(toFeedOn, d => d.isSame(date));
-
-  //   return <Day name={day} key={index} fedOn={fedOnThisDay} toFeed={toFeedOnThisDay} onClick={markFed.bind(null, date)}/>;
-  // });
 
   return (
     <View style={styles.page}>
@@ -138,11 +127,11 @@ class FoodState extends Component {
 
       const today = moment().startOf('day')
       const fedOn = moment(value)
-      console.log(fedOn);
+
       const toFeed = [2, 4, 6].map(n => {
-        return moment(fedOn.toString()).startOf('day').add(n, 'days')
+        return moment(fedOn).startOf('day').add(n, 'days')
       });
-      console.log(toFeed)
+
       const nextFeeding = _.head(toFeed);
 
       this.setState({
