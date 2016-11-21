@@ -16,8 +16,11 @@ const styles = {
     flex: 1,
     top: 20
   },
-  slider: {
+  days: {
     flex: 0.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around'
   },
   scrollContainer: {
     alignItems: 'center',
@@ -30,8 +33,8 @@ const styles = {
     width: 320,
   },
   dayImage: {
-    width: 50,
-    height: 100,
+    width: 75,
+    height: 150,
   },
 };
 
@@ -39,7 +42,7 @@ const foodImage = require('../../images/Food_Mutual.png');
 const foodUnfedImage = require('../../images/Food_Unfed.png');
 const foodFedImage = require('../../images/Food_Fed.png');
 
-const Day = ({name, fedOn, toFeed, highlighted, onClick}) => {
+const Day = ({name, fedOn, missedFeeding, onTouch}) => {
   const viewStyle = {
     marginLeft: 10,
     marginRight: 10,
@@ -48,61 +51,17 @@ const Day = ({name, fedOn, toFeed, highlighted, onClick}) => {
   };
   const textStyle = {
     fontFamily: 'Avenir',
-    color: highlighted ? 'red' : '#1FA7FF'
   };
 
-  const image = fedOn ? foodFedImage : toFeed ? foodUnfedImage : foodImage;
+  const image = fedOn ? foodFedImage : missedFeeding ? foodUnfedImage : foodImage;
 
   return (
-    <TouchableHighlight onPress={onClick}>
+    <TouchableHighlight onPress={onTouch} activeOpacity={0.5}>
       <View style={viewStyle}>
         <Image source={image} style={styles.dayImage} />
         <Text style={textStyle}>{name}</Text>
       </View>
     </TouchableHighlight>
-  );
-};
-
-const Food = ({markFed, fedOnDay, feedingDays}) => {
-  const feedingDayComponents = _.map(feedingDays, d => {
-    const name = d.format('dddd');
-
-    return (
-      <Day
-        name={name}
-        key={d.toString()}
-        onClick={markFed.bind(null, d)}
-        highlighted={moment().format('dddd') === name}
-        toFeed={true}
-      />
-    );
-  });
-  const fedDayComponent = (
-    <Day
-      name={fedOnDay.format('dddd')}
-      key={fedOnDay.toString()}
-      onClick={markFed.bind(null, fedOnDay)}
-      fedOn={true}
-    />
-  );
-
-  const dayComponents = [fedDayComponent, ...feedingDayComponents]
-
-  return (
-    <View style={styles.page}>
-      <View style={styles.slider}>
-        <ScrollView
-          horizontal
-          contentContainerStyle={styles.scrollContainer}
-          showsHorizontalScrollIndicator={false}
-        >
-          {dayComponents}
-        </ScrollView>
-      </View>
-      <View style={styles.footer}>
-        <Image style={styles.footerImage} source={require('../../images/Food_Footer.png')} />
-      </View>
-    </View>
   );
 };
 
@@ -113,61 +72,70 @@ class FoodState extends Component {
     this.state = {
       loading: true,
       fedOn: null,
-      toFeed: [],
+      nextFeeding: null,
     }
 
-    _.bindAll(this, 'markFed');
+    _.bindAll(this, 'markFed', 'generateToFeedDays');
   }
 
   componentDidMount() {
-    AsyncStorage.setItem('fedOn', moment());
     AsyncStorage.getItem('fedOn').then(value => {
-      if(_.isNil(value))
-        return;
+      console.log(value);
+      // why...
+      const day = (_.isNil(value) || value === 'null' || value === 'Invalid date') ? moment() : moment(value);
 
-      const today = moment().startOf('day')
-      const fedOn = moment(value)
-
-      const toFeed = [2, 4, 6].map(n => {
-        return moment(fedOn).startOf('day').add(n, 'days')
-      });
-
-      const nextFeeding = _.head(toFeed);
+      debugger
+      this.generateToFeedDays(day);
 
       this.setState({
-        fedOn,
-        toFeed,
         loading: false
       });
     });
   }
 
+  generateToFeedDays(fedOn) {
+    const nextFeeding = moment(fedOn).add(2, 'days')
+
+    this.setState({
+      fedOn: fedOn,
+      nextFeeding
+    });
+  }
+
   componentWillUpdate() {
-    AsyncStorage.setItem('fedOn', JSON.stringify(this.state.fedOn));
+    const { fedOn } = this.state;
+
+    if(!_.isNil(fedOn))
+      AsyncStorage.setItem('fedOn', fedOn.toString());
   }
 
   markFed(date) {
-    let fedOn;
-
-    if(_.some(this.state.fedOn, d => d.isSame(date)))
-      fedOn = _.filter(this.state.fedOn, d => !d.isSame(date))
-    else {
-      fedOn = [...this.state.fedOn]
-      fedOn.push(date);
-    }
-
-    this.setState({fedOn}, this.generateToFeedDays)
+    this.setState({fedOn: date}, () => this.generateToFeedDays(date))
   }
 
   render() {
     if(this.state.loading)
       return null;
 
-    return <Food
-      markFed={this.markFed}
-      fedOnDay={this.state.fedOn}
-      feedingDays={this.state.toFeed}
-    />;
+    const { fedOn, nextFeeding } = this.state;
+    const formatDate = date => date.format('dddd');
+    const today = moment();
+
+    return (
+      <View style={styles.page}>
+        <View style={styles.days}>
+          <Day fedOn onTouch={() => {}} name={formatDate(fedOn)} />
+          <Day
+            missedFeeding={nextFeeding.isBefore(today)}
+            onTouch={this.markFed.bind(null, today)}
+            name={formatDate(nextFeeding)}
+          />
+        </View>
+        <View style={styles.footer}>
+          <Image style={styles.footerImage} source={require('../../images/Food_Footer.png')} />
+        </View>
+      </View>
+    );
   }
 }
 
