@@ -84,7 +84,6 @@ class FoodState extends Component {
       // why...
       const day = (_.isNil(value) || value === 'null' || value === 'Invalid date') ? moment() : moment(value);
 
-      debugger
       this.generateToFeedDays(day);
 
       this.setState({
@@ -122,18 +121,13 @@ class FoodState extends Component {
     const today = moment();
 
     return (
-      <View style={styles.page}>
-        <View style={styles.days}>
-          <Day fedOn onTouch={() => {}} name={formatDate(fedOn)} />
-          <Day
-            missedFeeding={nextFeeding.isBefore(today)}
-            onTouch={this.markFed.bind(null, today)}
-            name={formatDate(nextFeeding)}
-          />
-        </View>
-        <View style={styles.footer}>
-          <Image style={styles.footerImage} source={require('../../images/Food_Footer.png')} />
-        </View>
+      <View style={styles.days}>
+        <Day fedOn onTouch={() => {}} name={formatDate(fedOn)} />
+        <Day
+          missedFeeding={nextFeeding.isBefore(today)}
+          onTouch={this.markFed.bind(null, today)}
+          name={formatDate(nextFeeding)}
+        />
       </View>
     );
   }

@@ -13,6 +13,11 @@ import {
 import * as scenes from './shared/scenes';
 import makeRoute from './shared/utils/makeRoute';
 import NavigationBarRouteMapper from './shared/NavigationBarRouteMapper';
+import PageLayout from './shared/pageLayout';
+
+const footerImages = {
+  'Food': require('./images/Food_Footer.png')
+};
 
 class EdTheAxolotl extends Component {
   render() {
@@ -30,17 +35,19 @@ class EdTheAxolotl extends Component {
 
           return (
             <View style={{flex: 1}}>
-              <Scene
-                title={route.title}
+              <PageLayout footerImage={footerImages[route.scene]}>
+                <Scene
+                  title={route.title}
 
-                onForward={(title, scene, props) => {
-                  navigator.push(makeRoute(title, route.index, scene, props));
-                }}
-                onBack={(title, scene, props) => {
-                  if (route.index > 0)
-                    navigator.pop();
-                }}
-              />
+                  onForward={(title, scene, props) => {
+                    navigator.push(makeRoute(title, route.index, scene, props));
+                  }}
+                  onBack={(title, scene, props) => {
+                    if (route.index > 0)
+                      navigator.pop();
+                  }}
+                />
+              </PageLayout>
             </View>
             );
         }}
