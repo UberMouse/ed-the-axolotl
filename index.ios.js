@@ -30,6 +30,7 @@ class EdTheAxolotl extends Component {
             style={{height: 60}}
           />
         }
+        configureScene={() => Navigator.SceneConfigs.FloatFromRight}
         renderScene={(route, navigator) => {
           const Scene = scenes[route.scene];
 

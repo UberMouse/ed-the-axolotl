@@ -56,7 +56,7 @@ const Day = ({name, fedOn, missedFeeding, onTouch}) => {
   const image = fedOn ? foodFedImage : missedFeeding ? foodUnfedImage : foodImage;
 
   return (
-    <TouchableHighlight onPress={onTouch} activeOpacity={0.5}>
+    <TouchableHighlight onPress={onTouch} activeOpacity={0.5} underlayColor="white">
       <View style={viewStyle}>
         <Image source={image} style={styles.dayImage} />
         <Text style={textStyle}>{name}</Text>
@@ -80,7 +80,6 @@ class FoodState extends Component {
 
   componentDidMount() {
     AsyncStorage.getItem('fedOn').then(value => {
-      console.log(value);
       // why...
       const day = (_.isNil(value) || value === 'null' || value === 'Invalid date') ? moment() : moment(value);
 

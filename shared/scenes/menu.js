@@ -54,7 +54,7 @@ const Row = ({icon, header, description, onTouchCb}) => {
 
   return (
     <View>
-      <TouchableHighlight onPress={onTouchCb}>
+      <TouchableHighlight onPress={onTouchCb} activeOpacity={0.5} underlayColor="white">
         <View style={styles.row}>
           <Image style={styles.rowIcon} source={icon} />
           <View style={styles.rowTextContainer}>

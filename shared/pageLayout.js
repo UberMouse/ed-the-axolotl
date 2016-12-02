@@ -4,7 +4,8 @@ import { View, Image } from 'react-native';
 const styles = {
   page: {
     flex: 1,
-    top: 20
+    top: 20,
+    backgroundColor: 'white',
   },
   footer: {
     flex: 0.5,
@@ -13,6 +14,9 @@ const styles = {
     height: 270,
     width: 320,
   },
+  childrenContainer: {
+    backgroundColor: 'white'
+  }
 };
 
 export default ({children, footerImage}) => (
